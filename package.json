@@ -1,0 +1,70 @@
+{
+  "name": "research-display",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "concurrently -k \"tsx watch server/main.ts\" \"tsx watch server/documents/worker.ts\" \"vite --host 127.0.0.1\"",
+    "build": "tsc --noEmit && vite build && tsc -p tsconfig.server.json",
+    "start": "node --import tsx scripts/start.ts",
+    "start:api": "node dist-server/server/main.js",
+    "worker": "node dist-server/server/documents/worker.js",
+    "db:migrate": "tsx server/db/migrate.ts",
+    "admin:create": "tsx server/auth/create-admin.ts",
+    "db:local": "node --import tsx scripts/local-postgres.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "test:integration": "tsx --test --test-concurrency=1 tests/integration/*.test.ts"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "@tailwindcss/vite": "^4.1.13",
+    "@tiptap/extension-image": "^3.4.1",
+    "@tiptap/extension-table": "^3.4.1",
+    "@tiptap/react": "^3.4.1",
+    "@tiptap/starter-kit": "^3.4.1",
+    "adm-zip": "^0.6.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.2",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "htmlparser2": "^12.0.0",
+    "multer": "^2.0.2",
+    "node-unrar-js": "^2.0.2",
+    "pg": "^8.16.3",
+    "pino": "^9.9.4",
+    "playwright": "^1.55.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "sanitize-html": "^2.17.0",
+    "tailwindcss": "^4.1.13",
+    "zod": "^4.1.8"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.5.2",
+    "@types/pg": "^8.15.5",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@types/sanitize-html": "^2.16.0",
+    "@vitejs/plugin-react": "^5.0.3",
+    "async-exit-hook": "^2.0.1",
+    "concurrently": "^9.2.1",
+    "embedded-postgres": "18.4.0-beta.17",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
+  }
+}

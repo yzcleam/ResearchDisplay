@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: research
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请在 .env.docker 中设置数据库密码}
+      POSTGRES_DB: research_display
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U research -d research_display"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  migrate:
+    build: .
+    environment: &app_environment
+      DATABASE_URL: postgresql://research:${POSTGRES_PASSWORD}@db:5432/research_display
+      HOST: 0.0.0.0
+      APP_ORIGIN: ${APP_ORIGIN:?请设置网站访问地址}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      NODE_ENV: ${NODE_ENV:-production}
+      STORAGE_DIR: /app/storage
+      REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-true}
+      REGISTRATION_INVITE_CODE: ${REGISTRATION_INVITE_CODE:-}
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+    command: ["node", "dist-server/server/db/migrate.js"]
+    depends_on:
+      db:
+        condition: service_healthy
+  app:
+    build: .
+    restart: unless-stopped
+    environment: *app_environment
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - research_files:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  worker:
+    build: .
+    restart: unless-stopped
+    environment: *app_environment
+    command: ["node", "dist-server/server/documents/worker.js"]
+    volumes:
+      - research_files:/app/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+volumes:
+  postgres_data:
+  research_files:
