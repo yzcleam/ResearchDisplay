@@ -2,7 +2,7 @@ import { ArrowSquareOut, DownloadSimple, FilePdf, X } from '@phosphor-icons/reac
 import { useEffect, useRef, useState } from 'react';
 import { sections, type Section } from '../../shared/contracts';
 import { showcaseLabels, type ShowcaseDetail } from '../../shared/showcase';
-import { errorMessage, fileUrl } from '../api';
+import { documentHtmlForDisplay, errorMessage, fileUrl } from '../api';
 import { date, size } from '../components';
 import { queries } from '../data/read-models';
 
@@ -197,7 +197,7 @@ export function ResearchReader({
                     {hasHtml ? (
                       <div
                         className="research-prose"
-                        dangerouslySetInnerHTML={{ __html: content.html }}
+                        dangerouslySetInnerHTML={{ __html: documentHtmlForDisplay(content.html) }}
                       />
                     ) : (
                       <div className="reader-missing">

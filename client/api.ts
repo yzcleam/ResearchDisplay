@@ -1,5 +1,16 @@
 let csrf = '';
-const base = import.meta.env.VITE_API_BASE || '';
+export const appHome = import.meta.env.BASE_URL;
+const base = (import.meta.env.VITE_API_BASE || appHome.slice(0, -1)).replace(/\/$/, '');
+const canonicalFilePrefix = '/api/files/';
+const publicFilePrefix = `${base}${canonicalFilePrefix}`;
+export const publicFilePath = (path: string) =>
+  path.startsWith(canonicalFilePrefix) ? `${base}${path}` : path;
+export const canonicalFilePath = (path: string) =>
+  base && path.startsWith(publicFilePrefix) ? path.slice(base.length) : path;
+export const documentHtmlForDisplay = (html: string) =>
+  base ? html.replaceAll(`src="${canonicalFilePrefix}`, `src="${publicFilePrefix}`) : html;
+export const documentHtmlForStorage = (html: string) =>
+  base ? html.replaceAll(`src="${publicFilePrefix}`, `src="${canonicalFilePrefix}`) : html;
 export function setCsrf(value: string) {
   csrf = value;
 }

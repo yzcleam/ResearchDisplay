@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const basePath = env.APP_BASE_PATH || '/';
+  if (!/^\/(?:[a-zA-Z0-9_-]+\/)*$/.test(basePath)) {
+    throw new Error('APP_BASE_PATH 必须是以 / 开始和结尾的路径，例如 /research/。');
+  }
   const origin = new URL(env.APP_ORIGIN || 'http://localhost:5173');
   const webPort = Number(origin.port || (origin.protocol === 'https:' ? 443 : 80));
   const apiPort = Number(env.PORT || 3001);
@@ -20,6 +24,7 @@ export default defineConfig(({ mode }) => {
   const apiHost = env.HOST || '127.0.0.1';
   const proxyHost = apiHost === '0.0.0.0' ? '127.0.0.1' : apiHost === '::1' ? '[::1]' : apiHost;
   return {
+    base: basePath,
     plugins: [react(), tailwindcss()],
     server: {
       host: origin.hostname === '[::1]' ? '::1' : '127.0.0.1',

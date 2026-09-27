@@ -9,7 +9,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { researchTypes, type Factor, type Section, type User } from '../../shared/contracts';
 import type { ShowcaseOverview } from '../../shared/showcase';
-import { errorMessage } from '../api';
+import { appHome, errorMessage } from '../api';
 import { queries } from '../data/read-models';
 import { ResearchGraph } from './Graph';
 import { ResearchReader } from './Reader';
@@ -140,7 +140,7 @@ export function Showcase({
       <header className="showcase-header">
         <a
           className="showcase-brand"
-          href="/"
+          href={appHome}
           onClick={(event) => {
             event.preventDefault();
             setSearch('');

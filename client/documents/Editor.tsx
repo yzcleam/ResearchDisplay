@@ -26,7 +26,14 @@ import {
   type Section,
 } from '../../shared/contracts';
 import { AiFillDialog } from '../ai/index';
-import { errorMessage, fileUrl } from '../api';
+import {
+  canonicalFilePath,
+  documentHtmlForDisplay,
+  documentHtmlForStorage,
+  errorMessage,
+  fileUrl,
+  publicFilePath,
+} from '../api';
 import { Alert } from '../components';
 import { queries } from '../data/read-models';
 import { commands } from '../data/write-models';
@@ -80,7 +87,11 @@ export function RichEditor({
         const form = new FormData();
         form.append('editor_image', file);
         const result = await commands.uploadFiles(researchId, form);
-        editor?.chain().focus().setImage({ src: result[0].url, alt: file.name }).run();
+        editor
+          ?.chain()
+          .focus()
+          .setImage({ src: publicFilePath(result[0].url), alt: file.name })
+          .run();
       }
       await refreshRef.current();
     } catch (e) {
@@ -95,7 +106,7 @@ export function RichEditor({
       Image.configure({ allowBase64: false }),
       TableKit.configure({ table: { resizable: false } }),
     ],
-    content: initial?.html || '<p></p>',
+    content: documentHtmlForDisplay(initial?.html || '<p></p>'),
     editable: !readOnly,
     shouldRerenderOnTransaction: true,
     editorProps: {
@@ -126,8 +137,11 @@ export function RichEditor({
       transformPastedHTML: (html) => {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         doc.querySelectorAll('img').forEach((img) => {
-          if (!/^\/api\/files\/[0-9a-f-]{36}\/content$/.test(img.getAttribute('src') || '')) {
+          const canonicalSrc = canonicalFilePath(img.getAttribute('src') || '');
+          if (!/^\/api\/files\/[0-9a-f-]{36}\/content$/.test(canonicalSrc)) {
             img.remove();
+          } else {
+            img.setAttribute('src', publicFilePath(canonicalSrc));
           }
         });
         return doc.body.innerHTML;
@@ -170,11 +184,11 @@ export function RichEditor({
       return;
     }
     const saved = await commands.saveDocument(researchId, section, {
-      html: editor.getHTML(),
+      html: documentHtmlForStorage(editor.getHTML()),
       revision,
     });
     setRevision(saved.revision);
-    editor.commands.setContent(saved.html, { emitUpdate: false });
+    editor.commands.setContent(documentHtmlForDisplay(saved.html), { emitUpdate: false });
     setDirty(false);
     onDirty(false);
     await refreshRef.current();
@@ -353,7 +367,7 @@ export function RichEditor({
                 type="button"
                 className="secondary"
                 disabled={busy || uploading}
-                onClick={() => setAiHtml(editor.getHTML())}
+                onClick={() => setAiHtml(documentHtmlForStorage(editor.getHTML()))}
               >
                 <Sparkle size={17} />
                 AI 生成摘要

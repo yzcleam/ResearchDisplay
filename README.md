@@ -117,6 +117,31 @@ API Key 在数据库中加密保存，浏览器只能查看“已保存”状态
 
 普通成员可以查看全部组内资料、修改自己创建的成果；管理员可以修改全部成果并管理账号。停用成员或更改权限会撤销其已有登录。
 
+## Linux 宿主机部署到子路径
+
+如果 HTTPS 反向代理把 `/research/` 转发到本机 `10115`，并在转发时去掉 `/research/` 前缀，请在服务器原有 `.env` 中保留 `DATABASE_URL` 和 `STORAGE_DIR`，设置：
+
+```dotenv
+PORT=10115
+HOST=127.0.0.1
+APP_ORIGIN=https://你的域名
+APP_BASE_PATH=/research/
+NODE_ENV=production
+COOKIE_SECURE=true
+TRUST_PROXY=1
+```
+
+`APP_ORIGIN` 只填写浏览器地址的协议和域名，不包含 `/research/`；`APP_BASE_PATH` 才是公开访问的路径，必须以 `/` 开始和结尾。前端构建时会把它写入静态资源和 API 地址，因此修改后需要重新构建。原有数据库必须先运行，然后执行：
+
+```bash
+npm ci --include=dev
+npm run build
+npm run db:migrate
+npm run start:api
+```
+
+另起一个进程运行 `npm run worker` 处理 PDF。`start:api` 在前台持续运行，同时提供网页和 API；生产环境应通过原有进程管理器托管 API 和 worker。反向代理到 `http://127.0.0.1:10115/` 时，浏览器请求 `/research/assets/…` 和 `/research/api/…` 均会去掉前缀后到达应用。
+
 ## Docker 部署
 
 包含 PostgreSQL、迁移、API/静态网页、独立 PDF worker 四个服务。需要已启动的 Docker Engine。

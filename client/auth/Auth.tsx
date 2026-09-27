@@ -1,7 +1,7 @@
 import { ArrowRight, Books, CheckCircle, ShieldCheck } from '@phosphor-icons/react';
 import { useState, type FormEvent } from 'react';
 import type { User } from '../../shared/contracts';
-import { errorMessage, setCsrf } from '../api';
+import { appHome, errorMessage, setCsrf } from '../api';
 import { Alert, Field } from '../components';
 import { commands } from '../data/write-models';
 export function Auth({ onLogin }: { onLogin: (user: User) => void }) {
@@ -45,7 +45,7 @@ export function Auth({ onLogin }: { onLogin: (user: User) => void }) {
   return (
     <main className="auth-page">
       <section className="auth-story">
-        <a className="brand" href="/">
+        <a className="brand" href={appHome}>
           <span className="brand-mark">
             <Books size={26} />
           </span>

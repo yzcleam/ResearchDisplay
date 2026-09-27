@@ -1,5 +1,6 @@
 import { Books, CaretRight, Database, SignOut, type Icon } from '@phosphor-icons/react';
 import type { User } from '../../shared/contracts';
+import { appHome } from '../api';
 
 export type ManagementView = 'research' | 'space' | 'factors' | 'history' | 'users' | 'ai';
 export type NavigationItem = { key: ManagementView; label: string; icon: Icon };
@@ -17,7 +18,7 @@ export function ManagementSidebar({ user, nav, view, mobile, onNavigate, onLogou
     <aside className={`sidebar ${mobile ? 'open' : ''}`}>
       <a
         className="brand"
-        href="/"
+        href={appHome}
         onClick={(e) => {
           e.preventDefault();
           onNavigate('research');
