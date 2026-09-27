@@ -2,7 +2,11 @@
 
 本仓库实现 **研究成果图谱前端、研究资料管理后台、PostgreSQL 数据层、实名注册登录与权限，以及四类图文说明在线编辑并转为 PDF**。登录默认进入成果展示前端；资料仅向已登录的课题组成员开放。
 
+后台“文件共享空间”按科研项目展示原始论文、原始数据、说明文档和其他文件。项目管理者可拖拽或选择任意类型文件上传到“其他文件”，并为每份文件选择全域共享、指定用户或私有；表单上传的原始数据默认私有，其他材料默认全域共享。普通成员能浏览全部文件目录，只能下载自己管理的项目、指定共享或全域共享的文件；导师可下载全部文件并删除自己上传的文件；管理员可管理所有文件及共享权限。导师账号由管理员在“成员管理”中创建。
+
 技术：Node.js / TypeScript、Express、PostgreSQL、React、Tiptap、Playwright Chromium。系统不包含虚构的研究成果或默认管理员密码。
+
+模块划分、表的归属和跨模块事务见 [系统架构](docs/ARCHITECTURE.md)；按功能复审代码可从 [代码复审指南](docs/CODE_REVIEW.md) 开始。`npm run check:architecture` 检查依赖方向、公开入口、SQL 归属及读写边界，已接入 `npm run build`。日常提交前运行 `npm run format:check` 检查源码格式，使用 `npm run format` 自动整理。
 
 ## 本地运行（Windows 也适用）
 
@@ -12,13 +16,15 @@
 npm ci
 ```
 
+项目的 `.npmrc` 已配置国内 npm 镜像 `https://registry.npmmirror.com/`，对 Windows、Linux 均生效。临时切回官方源可用 `npm ci --registry=https://registry.npmjs.org/`；保留 `package-lock.json`，不需要改写锁文件中的下载地址。
+
 **一键启动全部服务**：
 
 ```powershell
 npm start
 ```
 
-打开 **http://localhost:5173**。该命令自动启动本地 PostgreSQL、执行数据库迁移，再启动后端 API、PDF 工作进程和前后台页面。按 **Ctrl+C** 统一停止本次启动的服务，已有数据和上传文件会保留。
+默认打开 **http://localhost:5173**；如果修改了 `APP_ORIGIN`，请打开该配置中的地址。该命令自动启动本地 PostgreSQL、执行数据库迁移，再启动后端 API、PDF 工作进程和前后台页面。按 **Ctrl+C** 统一停止本次启动的服务，已有数据和上传文件会保留。
 
 停止时请等到出现“本次启动的服务已全部停止。”再关闭终端。数据库通过 PostgreSQL 自带的 `pg_ctl` 正常关闭；启动失败会给出具体原因，日志保存在 `.local/postgres.log`。如果日志提示旧进程占用共享内存，需要确认并清理本项目的残留 PostgreSQL 进程；不要删除 `.local/postgres` 数据目录。
 
@@ -40,7 +46,14 @@ Remove-Item Env:ADMIN_PASSWORD
 
 也保留分步命令：`npm run db:local` 启动数据库，`npm run db:migrate` 执行迁移，`npm run dev` 启动支持后端热重载的开发服务。原来只启动已构建后端的命令改为 `npm run start:api`，需另行运行数据库和 `npm run worker`。
 
-`npm start` 提供前端热更新；修改后端代码后重新启动即可。网页端口取自 `.env` 的 `APP_ORIGIN`，API 端口取自 `PORT`。
+`npm start` 提供前端热更新；修改后端代码后重新启动即可。要自定义本地服务监听端口，编辑 `.env`（没有该文件时首次运行 `npm start` 会自动生成）：
+
+```dotenv
+APP_ORIGIN=http://localhost:10086
+PORT=10087
+```
+
+`APP_ORIGIN` 的端口是前端监听端口，也是浏览器访问地址；`PORT` 是后端 API 监听端口，两者必须不同且未被占用。默认分别为 `5173` 和 `3001`。`npm start` 与 `npm run dev` 都使用这两个设置，开发服务器会将 `/api` 请求转发到设置的后端端口。修改后重新启动服务即可生效。
 
 本地工具会尝试使用 Windows 已安装的 Chrome。其他环境或没有 Chrome 时，执行 `npx playwright install chromium` 并留空 `.env` 中 `CHROMIUM_EXECUTABLE_PATH`。Linux 还需安装浏览器系统依赖和中文字体，如 `fonts-noto-cjk`。Windows 也可将该路径设为 Edge 的绝对路径。
 
@@ -114,7 +127,7 @@ Copy-Item .env.docker.example .env.docker
 docker compose --env-file .env.docker up --build -d
 ```
 
-本机试运行默认打开 `http://localhost:3001`。要部署到服务器，请先配置 HTTPS 反向代理，然后设置 `APP_ORIGIN=https://你的域名`、`NODE_ENV=production`、`COOKIE_SECURE=true`；有一层受信任反向代理时设 `TRUST_PROXY=1`，并只允许代理访问应用监听端口。正式模式在未配置 HTTPS 安全 Cookie 时拒绝启动。数据库端口不向宿主机公开。
+本机试运行默认打开 `http://localhost:3001`。Docker 中前端静态页面与 API 由同一服务提供；如需更改其监听端口，在 `.env.docker` 中同时修改 `PORT` 和 `APP_ORIGIN` 的端口，例如 `PORT=10087`、`APP_ORIGIN=http://localhost:10087`。要部署到服务器，请先配置 HTTPS 反向代理，然后设置 `APP_ORIGIN=https://你的域名`、`NODE_ENV=production`、`COOKIE_SECURE=true`；有一层受信任反向代理时设 `TRUST_PROXY=1`，并只允许代理访问应用监听端口。正式模式在未配置 HTTPS 安全 Cookie 时拒绝启动。数据库端口不向宿主机公开。
 
 容器内创建管理员：
 

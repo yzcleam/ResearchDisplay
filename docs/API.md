@@ -9,11 +9,13 @@
 | 方法 | 路径 | 用途 / 权限 |
 | --- | --- | --- |
 | POST | `/auth/register` | `{email,password,real_name,institution,invite_code?}`，永远只创建 member |
+| GET | `/auth/directory` | 已登录用户读取启用成员的 ID 与姓名，供指定用户共享使用 |
 | POST | `/auth/login` | `{email,password}`，返回用户与 CSRF 令牌 |
 | GET | `/auth/me` | 当前用户与 CSRF 令牌，供刷新页面恢复会话 |
 | POST | `/auth/logout` | 撤销当前会话 |
 | GET | `/users` | 管理员读取成员列表（最多 500 条） |
-| PATCH | `/users/:id` | 管理员提交 `{role,active}`，撤销被修改账号会话；禁止自我停用、自我降权 |
+| POST | `/users` | 管理员创建导师账号 `{email,password,real_name,institution}` |
+| PATCH | `/users/:id` | 管理员提交 `{role,active}`，role 可为 admin/teacher/member；撤销被修改账号会话；禁止自我停用、自我降权 |
 | GET | `/factors` | 全部要素字典及研究、当前文件数量 |
 | POST | `/factors` | 管理员新增 `{name}` |
 | PATCH | `/factors/:id` | 管理员更新 `{name,active}` |
@@ -24,7 +26,7 @@
 | PUT | `/research/:id` | 作者或管理员更新；必须提交读到的 `version` |
 | GET | `/research/:id/history` | 最近 200 次操作记录 |
 | POST | `/files/research/:id` | 作者或管理员批量上传，multipart 字段名为文件 role，最多 12 个文件 |
-| GET | `/files/:id/content` | 已登录成员读取文件；`?download=1` 强制下载 |
+| GET | `/files/:id/content` | 按文件权限读取；`?download=1` 强制下载。普通成员须为项目管理者、指定共享对象或访问全域共享文件，导师与管理员可读取全部文件 |
 | PUT | `/documents/research/:id/:section` | 作者或管理员保存 `{html,revision}`；首次 revision=0 |
 | POST | `/documents/research/:id/:section/pdf` | 入队，202 返回 PDF 任务。先保存原稿。相同版本的在途任务去重 |
 | GET | `/documents/jobs/:id` | 查询状态 `queued/running/completed/failed/superseded` 与文件 ID |
@@ -32,6 +34,20 @@
 | GET | `/stats` | 当前组内成果、文件、类型和本人研究数量 |
 
 `/health` 为进程存活检查，`/ready` 为数据库连通性检查，均无 `/api` 前缀。
+
+## 文件共享空间
+
+以下路径均以 `/api` 为前缀并要求登录。项目及四类目录对全部登录用户可见；无下载权时列表仍返回文件元数据和 `can_download:false`，内容接口返回 403。自助上传固定归入“其他文件”，每批最多 12 份，每份不超过配置的 `MAX_FILE_MB`，总量不超过 100 MB；任意格式都按附件下载。删除为逻辑删除，文件立即从列表和内容接口消失。
+
+| 方法 | 路径 | 用途 / 权限 |
+| --- | --- | --- |
+| GET | `/files/space` | 列出科研项目及当前文件数 |
+| GET | `/files/space/:researchId` | 返回四类目录的当前文件及 `can_download/can_delete/can_share` |
+| POST | `/files/space/:researchId` | 项目管理者上传 multipart：`files` 可重复，`sharing` 为 JSON 字符串 `{scope,user_ids}` |
+| PATCH | `/files/:id/sharing` | 项目管理者、上传者中的导师或管理员更新单文件共享权限 |
+| DELETE | `/files/:id` | 普通成员可删自己管理项目的文件，导师可删自己上传的文件，管理员可删全部文件 |
+
+`scope` 为 `global`、`specific`、`private`；仅 `specific` 允许且必须提供非空 `user_ids`（启用用户 UUID 数组）。原有表单上传保持原格式校验，其中 `dataset` 默认为 `private`，其他角色默认为 `global`。原始论文目录为 `manuscript`，原始数据为 `dataset`，其余表单材料（指标表、PDF、图片包和插图）归入说明文档；自主上传归入其他文件。
 
 ## 成果图谱展示
 

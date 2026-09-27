@@ -1,41 +1,15 @@
-import { useEffect, useState } from 'react';
-import { Books, SquaresFour, FolderOpen, ClockCounterClockwise, Users, SignOut, Plus, MagnifyingGlass, ArrowUpRight, Database, Files, List, X, CaretRight, Sparkle } from '@phosphor-icons/react';
-import { Showcase } from './showcase/Showcase';
-import { AiSettings } from './AiSettings';
-import { Auth } from './Auth';
-import { api, errorMessage, setCsrf } from './api';
-import { Alert, Empty, Loading, date } from './components';
-import { ResearchDetail, History } from './ResearchDetail';
-import { FactorManagement, UserManagement } from './Management';
-import { researchTypes, type User, type Factor, type Research, type UploadEvent } from '../shared/contracts';
-type View='research'|'factors'|'history'|'users'|'ai';
-type Listing={items:Research[];total:number};
-type Stats={research:number;files:number;factors:number;mine:number};
-export function App(){
-  const [surface,setSurface]=useState<'showcase'|'management'>('showcase'),[managementVisited,setManagementVisited]=useState(false);
-  function enterManagement(){setManagementVisited(true);setSurface('management');}
-  const [user,setUser]=useState<User|null>(null),[initializing,setInitializing]=useState(true),[view,setView]=useState<View>('research'),[mobile,setMobile]=useState(false);
-  const [factors,setFactors]=useState<Factor[]>([]),[stats,setStats]=useState<Stats>({research:0,files:0,factors:0,mine:0}),[listing,setListing]=useState<Listing>({items:[],total:0}),[events,setEvents]=useState<UploadEvent[]>([]);
-  const [loading,setLoading]=useState(false),[error,setError]=useState(''),[q,setQ]=useState(''),[query,setQuery]=useState(''),[type,setType]=useState(''),[factor,setFactor]=useState(''),[mine,setMine]=useState(false),[page,setPage]=useState(1),[tick,setTick]=useState(0);
-  const [detail,setDetail]=useState<Research|null|undefined>(undefined);
-  useEffect(()=>{api<{user:User;csrf:string}>('/auth/me').then(r=>{setUser(r.user);setCsrf(r.csrf);}).catch(()=>{}).finally(()=>setInitializing(false));const expired=()=>{setUser(null);setDetail(undefined);setSurface('showcase');setManagementVisited(false);setError('登录已失效，请重新登录');};window.addEventListener('session-expired',expired);return()=>window.removeEventListener('session-expired',expired);},[]);
-  useEffect(()=>{const timer=setTimeout(()=>{setQuery(q);setPage(1);},300);return()=>clearTimeout(timer);},[q]);
-  async function refreshBasics(){const [f,s]=await Promise.all([api<Factor[]>('/factors'),api<Stats>('/stats')]);setFactors(f);setStats(s);}
-  useEffect(()=>{if(!user)return;refreshBasics().catch(e=>setError(errorMessage(e)));},[user?.id,tick]);
-  useEffect(()=>{if(!user||surface!=='management')return;let active=true;setLoading(true);setError('');const params=new URLSearchParams({q:query,page:String(page),mine:String(mine)});if(type)params.set('type',type);if(factor)params.set('factor',factor);const request=view==='history'?api<UploadEvent[]>('/uploads').then(r=>{if(active)setEvents(r);}):api<Listing>(`/research?${params}`).then(r=>{if(active)setListing(r);});request.catch(e=>{if(active)setError(errorMessage(e));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[user?.id,surface,view,query,type,factor,mine,page,tick]);
-  async function open(id:string){setLoading(true);setError('');try{setDetail(await api<Research>(`/research/${id}`));}catch(e){setError(errorMessage(e));}finally{setLoading(false);}}
-  async function logout(){try{await api('/auth/logout',{method:'POST',body:'{}'});setUser(null);setCsrf('');setDetail(undefined);setView('research');setSurface('showcase');setManagementVisited(false);}catch(e){setError(errorMessage(e));}}
-  function navigate(next:View){if(detail!==undefined&&!confirm('切换页面将关闭当前成果，请确认编辑内容已保存。'))return;setDetail(undefined);setView(next);setMobile(false);setError('');}
-  if(initializing)return <Loading/>;
-  if(!user)return <Auth onLogin={u=>{setUser(u);setError('');setSurface('showcase');setManagementVisited(false);}}/>;
-  const nav=[{key:'research' as View,label:'研究资料',icon:SquaresFour},{key:'factors' as View,label:'要素与文件',icon:FolderOpen},{key:'history' as View,label:'上传记录',icon:ClockCounterClockwise},...(user.role==='admin'?[{key:'users' as View,label:'成员管理',icon:Users},{key:'ai' as View,label:'LLM 设置',icon:Sparkle}]:[])];
-  return <>{surface==='showcase'&&<><Alert>{error}</Alert><Showcase user={user} factors={factors} onManage={enterManagement} onLogout={logout}/></>}{managementVisited&&<div className="app-shell management-surface" hidden={surface!=='management'}><aside className={`sidebar ${mobile?'open':''}`}><a className="brand" href="/" onClick={e=>{e.preventDefault();navigate('research');}}><span className="brand-mark"><Books size={25}/></span><span>研序<small>RESEARCH ARCHIVE</small></span></a><div className="workspace-label"><span className="workspace-dot"/>课题组工作空间</div><div className="nav-caption">资料管理</div><nav>{nav.map(n=><button key={n.key} className={view===n.key?'active':''} onClick={()=>navigate(n.key)}><n.icon size={21} weight={view===n.key?'fill':'regular'}/>{n.label}{view===n.key&&<CaretRight className="nav-arrow" size={14}/>}</button>)}</nav><div className="sidebar-note"><Database size={23} weight="light"/><strong>将研究积累为知识</strong><p>资料、图文与发现，<br/>在同一个空间有序连接。</p></div><div className="sidebar-user"><div className="avatar">{user.real_name.slice(-2)}</div><div><strong>{user.real_name}</strong><small>{user.role==='admin'?'管理员':'研究成员'}</small></div><button title="退出登录" aria-label="退出登录" onClick={()=>void logout()}><SignOut size={20}/></button></div></aside>{mobile&&<div className="sidebar-scrim" onClick={()=>setMobile(false)}/>}
-    <div className="workspace"><header className="topbar"><div className="breadcrumb"><button className="mobile-menu" aria-label="打开导航" onClick={()=>setMobile(!mobile)}>{mobile?<X size={23}/>:<List size={23}/>}</button><span>课题组资料库</span><CaretRight size={13}/><strong>{nav.find(n=>n.key===view)?.label}</strong></div><div className="topbar-actions"><span className="internal-label"><span/>内部协作空间</span><button type="button" className="return-showcase" onClick={()=>setSurface('showcase')}>回到前端<ArrowUpRight size={15}/></button></div></header><main className="main-content"><Alert>{error}</Alert>
-      {detail!==undefined?<ResearchDetail key={detail?.id||'new'} initial={detail} user={user} factors={factors} onBack={()=>{setDetail(undefined);setTick(t=>t+1);}} onChanged={()=>setTick(t=>t+1)}/>:view==='factors'?<FactorManagement factors={factors} admin={user.role==='admin'} onChanged={refreshBasics}/>:view==='ai'&&user.role==='admin'?<AiSettings/>:view==='users'?<UserManagement current={user}/>:view==='history'?<><div className="page-heading"><div><span className="eyebrow">ACTIVITY LOG</span><h1>上传与变更记录</h1><p>记录每一次研究积累。这里展示课题组最近 100 次操作。</p></div></div><section className="paper-panel">{loading?<Loading/>:events.length?<History events={events}/>:<Empty title="还没有上传记录">新建研究成果、上传文件和保存图文说明后，会自动留下记录。</Empty>}</section></>:<>
-      <div className="page-heading"><div><span className="eyebrow">RESEARCH WORKSPACE</span><h1>研究资料</h1><p>汇集研究成果，连接数据与发现。</p></div><button className="primary" onClick={()=>setDetail(null)}><Plus size={19}/>新建研究成果</button></div>
-      <section className="overview-strip" aria-label="资料概览">{[{label:'研究成果',value:stats.research,unit:'项',icon:Books},{label:'归档文件',value:stats.files,unit:'份',icon:Files},{label:'要素类型',value:stats.factors,unit:'类',icon:Database},{label:'我的研究',value:stats.mine,unit:'项',icon:FolderOpen}].map((s,i)=><div className="stat" key={s.label}><div className="stat-label">{s.label}<s.icon size={19} weight="light"/></div><div><strong>{String(s.value).padStart(2,'0')}</strong><span>{s.unit}</span></div><small>{['课题组的共同积累','当前版本的研究材料','启用的研究分类','由您创建的研究成果'][i]}</small></div>)}</section>
-      <section className="research-section"><div className="section-top"><div className="listing-tabs"><button className={!mine?'active':''} onClick={()=>{setMine(false);setPage(1);}}>全部成果 <span>{stats.research}</span></button><button className={mine?'active':''} onClick={()=>{setMine(true);setPage(1);}}>我的研究 <span>{stats.mine}</span></button></div><span className="small muted">最近更新优先</span></div><div className="filters"><div className="search-input"><MagnifyingGlass size={19}/><input aria-label="搜索研究题目" value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索研究题目…"/></div><select aria-label="筛选研究类型" value={type} onChange={e=>{setType(e.target.value);setPage(1);}}><option value="">全部研究类型</option>{researchTypes.map(t=><option key={t}>{t}</option>)}</select><select aria-label="筛选要素类型" value={factor} onChange={e=>{setFactor(e.target.value);setPage(1);}}><option value="">全部要素类型</option>{factors.map(f=><option key={f.id} value={f.id}>{f.name}</option>)}</select></div>
-      {loading?<Loading/>:listing.items.length?<div className="table-scroll"><table className="research-table"><thead><tr><th>研究题目</th><th>研究分类</th><th>创建人</th><th>归档文件</th><th>更新时间</th><th><span className="sr-only">操作</span></th></tr></thead><tbody>{listing.items.map((r,i)=><tr key={r.id}><td><button className="title-link" onClick={()=>void open(r.id)}><span className="row-index">{String((page-1)*20+i+1).padStart(2,'0')}</span><span>{r.title}<small>{r.factor_name}</small></span></button></td><td><span className="badge">{r.research_type}</span></td><td>{r.owner_name}</td><td><span className="file-count"><Files size={16}/>{r.file_count||0} 份</span></td><td className="date-cell">{date(r.updated_at)}</td><td><button className="icon-button" aria-label={`打开${r.title}`} onClick={()=>void open(r.id)}><ArrowUpRight size={20}/></button></td></tr>)}</tbody></table></div>:<Empty title={query||type||factor?'没有找到匹配的研究':'研究，从第一份资料开始'} action={!query&&!type&&!factor?<button className="secondary" onClick={()=>setDetail(null)}><Plus size={17}/>新建研究成果</button>:undefined}>{query||type||factor?'尝试更换关键词，或调整研究类型和要素筛选。':'创建研究档案，上传数据与论文，再用图文说明呈现研究发现。'}</Empty>}
-      <div className="pagination"><span>共 {listing.total} 项研究 · 第 {page} 页</span><button disabled={page===1||loading} onClick={()=>setPage(p=>p-1)}>上一页</button><button disabled={page*20>=listing.total||loading} onClick={()=>setPage(p=>p+1)}>下一页</button></div></section><div className="workspace-footer"><span>每一份资料，都是下一次发现的起点。</span><span>研序 · 研究成果管理</span></div></>}
-    </main></div></div>}</>;
+import { Workspace } from './application/Workspace';
+import { Auth, useSession } from './auth/index';
+import { Loading } from './components';
+
+/** 应用入口只负责会话门禁；工作空间和研究草稿各自管理状态。 */
+export function App() {
+  const session = useSession();
+  if (session.initializing) {
+    return <Loading />;
+  }
+  if (!session.user) {
+    return <Auth onLogin={session.onLogin} />;
+  }
+  return <Workspace key={session.user.id} user={session.user} onLogout={session.logout} />;
 }

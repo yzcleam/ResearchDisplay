@@ -1,0 +1,12 @@
+node_modules/
+.git/
+.local/
+.npm-cache/
+.playwright-cli/
+dist/
+dist-server/
+storage/
+output/
+package-lock.json
+.env
+.env.*

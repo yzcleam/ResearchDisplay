@@ -1,0 +1,314 @@
+.space-explorer {
+  display: grid;
+  grid-template-columns: minmax(220px, 290px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.space-projects,
+.space-content {
+  min-height: 470px;
+}
+.space-projects {
+  padding: 20px;
+}
+.space-projects h2 {
+  margin: 0 0 16px;
+  font-size: 17px;
+}
+.space-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  margin-bottom: 16px;
+}
+.space-search input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  outline: 0;
+  padding: 10px 0;
+}
+.space-project-list {
+  display: grid;
+  gap: 5px;
+  max-height: 65vh;
+  overflow: auto;
+}
+.space-project-list button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  border-radius: 9px;
+  padding: 10px;
+  cursor: pointer;
+}
+.space-project-list button.active,
+.space-project-list button:hover {
+  background: #edf3e8;
+}
+.space-project-list button span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.space-project-list strong,
+.space-file-info strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.space-project-list small,
+.space-file-info small,
+.space-folders small {
+  color: #73816e;
+  font-size: 12px;
+}
+.space-content {
+  padding: 22px;
+  position: relative;
+}
+.space-content.dragging {
+  outline: 2px dashed #668954;
+  outline-offset: -8px;
+}
+.space-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 23px;
+  color: #63765a;
+}
+.space-breadcrumb button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.space-breadcrumb strong {
+  color: #233b2a;
+}
+.space-folders {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.space-folders button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  color: #2c4935;
+}
+.space-folders button:hover {
+  border-color: #9fb58d;
+  background: #f8fbf5;
+}
+.space-folders button span {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+.space-folder-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 14px;
+}
+.space-folder-heading h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+.space-folder-heading p,
+.space-upload p {
+  margin: 0;
+  color: #71806d;
+  font-size: 13px;
+}
+.space-file-list {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+.space-file {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--line);
+}
+.space-file-info {
+  min-width: 140px;
+  flex: 1;
+  display: grid;
+  gap: 5px;
+}
+.space-scope {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 90px;
+  color: #65765f;
+  font-size: 12px;
+}
+.space-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.space-file-actions .ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  text-decoration: none;
+  font-size: 12px;
+}
+.space-file-actions .danger {
+  color: #a3473e;
+}
+.space-muted,
+.space-empty {
+  color: #819078;
+  font-size: 13px;
+}
+.space-empty {
+  padding: 42px 10px;
+  text-align: center;
+}
+.space-upload {
+  display: grid;
+  gap: 13px;
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px dashed #afc2a3;
+  border-radius: 12px;
+  background: #fafcf8;
+}
+.space-upload h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 5px;
+  font-size: 16px;
+}
+.space-upload input[type='file'] {
+  max-width: 100%;
+}
+.space-selected {
+  overflow-wrap: anywhere;
+}
+.space-sharing-fields {
+  display: grid;
+  gap: 10px;
+}
+.space-sharing-fields > label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.space-sharing-fields select {
+  min-width: 160px;
+}
+.space-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 13px;
+  max-height: 130px;
+  overflow: auto;
+}
+.space-people label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.space-edit {
+  width: 100%;
+  margin: 0 0 2px 37px;
+  padding: 14px;
+  background: #f7faf5;
+  border-radius: 10px;
+}
+.space-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+.space-drop-hint {
+  position: absolute;
+  inset: 8px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #eaf2e4ee;
+  color: #355b39;
+  font-weight: 700;
+  pointer-events: none;
+}
+.teacher-create {
+  padding: 20px;
+  margin-bottom: 18px;
+}
+.teacher-create h2 {
+  font-size: 18px;
+  margin: 0 0 5px;
+}
+.teacher-create p {
+  color: #71806d;
+  margin: 0 0 15px;
+  font-size: 13px;
+}
+.teacher-create form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.teacher-create input {
+  min-width: 160px;
+  flex: 1;
+}
+@media (max-width: 900px) {
+  .space-explorer {
+    grid-template-columns: 1fr;
+  }
+  .space-projects,
+  .space-content {
+    min-height: 0;
+  }
+  .space-project-list {
+    max-height: 230px;
+  }
+}
+@media (max-width: 600px) {
+  .space-folders {
+    grid-template-columns: 1fr;
+  }
+  .space-file-actions {
+    width: 100%;
+    padding-left: 37px;
+  }
+  .space-scope {
+    margin-left: 37px;
+  }
+  .space-edit {
+    margin-left: 0;
+  }
+}

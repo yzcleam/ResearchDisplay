@@ -1,0 +1,1 @@
+export { FactorManagement } from './FactorManagement';

@@ -18,6 +18,7 @@ services:
     environment: &app_environment
       DATABASE_URL: postgresql://research:${POSTGRES_PASSWORD}@db:5432/research_display
       HOST: 0.0.0.0
+      PORT: ${PORT:-3001}
       APP_ORIGIN: ${APP_ORIGIN:?请设置网站访问地址}
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
       NODE_ENV: ${NODE_ENV:-production}
@@ -34,14 +35,14 @@ services:
     restart: unless-stopped
     environment: *app_environment
     ports:
-      - "127.0.0.1:3001:3001"
+      - "127.0.0.1:${PORT:-3001}:${PORT:-3001}"
     volumes:
       - research_files:/app/storage
     depends_on:
       migrate:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:'+(process.env.PORT||3001)+'/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 20s
       timeout: 5s
       retries: 3
@@ -49,7 +50,7 @@ services:
     build: .
     restart: unless-stopped
     environment: *app_environment
-    command: ["node", "dist-server/server/documents/worker.js"]
+    command: ["node", "dist-server/server/workers/pdf.js"]
     volumes:
       - research_files:/app/storage
     depends_on:

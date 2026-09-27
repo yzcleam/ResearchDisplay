@@ -7,14 +7,17 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "dev": "concurrently -k \"tsx watch server/main.ts\" \"tsx watch server/documents/worker.ts\" \"vite --host 127.0.0.1\"",
-    "build": "tsc --noEmit && vite build && tsc -p tsconfig.server.json",
+    "dev": "concurrently -k \"tsx watch server/main.ts\" \"tsx watch server/workers/pdf.ts\" \"vite\"",
+    "build": "npm run check:architecture && tsc --noEmit && vite build && tsc -p tsconfig.server.json",
     "start": "node --import tsx scripts/start.ts",
     "start:api": "node dist-server/server/main.js",
-    "worker": "node dist-server/server/documents/worker.js",
+    "worker": "node dist-server/server/workers/pdf.js",
     "db:migrate": "tsx server/db/migrate.ts",
     "admin:create": "tsx server/auth/create-admin.ts",
     "db:local": "node --import tsx scripts/local-postgres.ts",
+    "format": "prettier --write \"**/*.{ts,tsx,css,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,css,json}\"",
+    "check:architecture": "node --import tsx scripts/check-architecture.ts",
     "test": "tsx --test tests/*.test.ts",
     "test:integration": "tsx --test --test-concurrency=1 tests/integration/*.test.ts"
   },
@@ -63,6 +66,7 @@
     "async-exit-hook": "^2.0.1",
     "concurrently": "^9.2.1",
     "embedded-postgres": "18.4.0-beta.17",
+    "prettier": "3.9.8",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vite": "^7.1.5"
