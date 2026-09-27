@@ -74,7 +74,9 @@ export function Workspace({ user, onLogout }: { user: User; onLogout: () => Prom
   const nav = [
     { key: 'research' as View, label: '研究资料', icon: SquaresFour },
     { key: 'space' as View, label: '文件共享空间', icon: FolderOpen },
-    { key: 'factors' as View, label: '要素与文件', icon: FolderOpen },
+    ...(user.role === 'member'
+      ? []
+      : [{ key: 'factors' as View, label: '要素与文件', icon: FolderOpen }]),
     { key: 'history' as View, label: '上传记录', icon: ClockCounterClockwise },
     ...(user.role === 'admin'
       ? [
@@ -98,7 +100,7 @@ export function Workspace({ user, onLogout }: { user: User; onLogout: () => Prom
         onChanged={refresh}
       />
     );
-  } else if (view === 'factors') {
+  } else if (view === 'factors' && user.role !== 'member') {
     managementContent = (
       <FactorManagement factors={factors} admin={user.role === 'admin'} onChanged={refreshBasics} />
     );
